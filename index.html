@@ -424,7 +424,6 @@ button:disabled,
 
 /* CABEÇALHO MK BRAIDS */
 body > header {
-  body > header {
   max-width: 1000px;
   min-height: 240px;
   margin: 0 auto 30px;
@@ -440,6 +439,39 @@ body > header {
     url("./capa-mk-braids.png") center 35% / cover no-repeat;
   box-shadow: 0 10px 30px #0008;
 }
+
+body > header h1 {
+  margin: 0;
+  color: #ecd49a;
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 22px #d4af6525;
+}
+
+body > header p {
+  margin: 8px 0 0;
+  color: #bdb5a6;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  body > header {
+    margin-bottom: 20px;
+    padding: 20px 12px;
+  }
+
+  body > header h1 {
+    letter-spacing: 3px;
+  }
+
+  body > header p {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
 }
 
 /* BUSCA E FILTROS */
