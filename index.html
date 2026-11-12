@@ -425,19 +425,16 @@ button:disabled,
 /* CABEÇALHO MK BRAIDS */
 body > header {
   max-width: 1000px;
-  min-height: 240px;
   margin: 0 auto 30px;
-  padding: 40px 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  padding: 24px 20px;
   text-align: center;
-  border: 1px solid #80632f;
-  border-radius: 16px;
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.88), rgba(0,0,0,.25)),
-    url("./capa-mk-braids.png") center 35% / cover no-repeat;
-  box-shadow: 0 10px 30px #0008;
+  border-bottom: 1px solid #80632f;
+  background: linear-gradient(
+    180deg,
+    #211b10 0%,
+    #0b0b0b 100%
+  );
+  border-radius: 16px 16px 0 0;
 }
 
 body > header h1 {
@@ -648,8 +645,40 @@ body > header p {
   }
 }
 
+
+/* NAVEGAÇÃO ENTRE PAINEL E AGENDA */
+.abas-navegacao {
+  display: flex;
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.abas-navegacao .aba {
+  flex: 1;
+  border: 1px solid #80632f;
+  background: #171717;
+  color: #d4af65;
+}
+
+.abas-navegacao .aba.ativa {
+  background: linear-gradient(135deg, #ecd49a, #bd9447);
+  color: #17120a;
+}
+
+#tela-agenda {
+  margin-top: 20px;
+}
+
+#formulario-agenda {
+  margin-top: 20px;
+}
+
+#formulario-agenda button {
+  width: 100%;
+  min-height: 48px;
+}
+
   </style>
-    <link rel="manifest" href="./manifest.json">
 </head>
 
 <body>
@@ -685,7 +714,17 @@ body > header p {
     <button class="botao" id="botao-sair" type="button">
       Sair
     </button>
+    <div class="abas-navegacao">
+  <button class="botao aba ativa" id="aba-painel" type="button">
+    Painel
+  </button>
 
+  <button class="botao aba" id="aba-agenda" type="button">
+    Agenda MK
+  </button>
+</div>
+
+<div id="conteudo-painel">
 <div class="resumo-agendamentos">
   <div class="indicador">
     <span>Pendentes</span>
@@ -746,6 +785,46 @@ body > header p {
 </section>
 
       <div id="lista-agendamentos"></div>
+      </div>
+
+<section class="cartao" id="tela-agenda" hidden>
+  <h2>Agenda MK</h2>
+  <p>Cadastre os horários combinados pelo WhatsApp ou Instagram.</p>
+
+  <h3>Novo agendamento</h3>
+
+  <form id="formulario-agenda">
+    <label for="agenda-nome">Nome da cliente</label>
+    <input id="agenda-nome" type="text" required placeholder="Nome da cliente">
+
+    <label for="agenda-telefone">WhatsApp</label>
+    <input id="agenda-telefone" type="tel" placeholder="Telefone">
+
+    <label for="agenda-servico">Penteado</label>
+    <input id="agenda-servico" type="text" required placeholder="Ex.: Nagô, Box Braids...">
+
+    <label for="agenda-data">Data e horário</label>
+    <input id="agenda-data" type="datetime-local" required>
+
+    <label for="agenda-origem">Por onde a cliente entrou em contato?</label>
+    <select id="agenda-origem">
+      <option value="WhatsApp">WhatsApp</option>
+      <option value="Instagram">Instagram</option>
+      <option value="Outro">Outro</option>
+    </select>
+
+    <label for="agenda-observacoes">Observações</label>
+    <textarea id="agenda-observacoes" rows="3" placeholder="Detalhes do penteado ou atendimento"></textarea>
+
+    <button class="botao" type="submit">Salvar agendamento</button>
+    <p id="mensagem-agenda"></p>
+  </form>
+
+  <h3>Horários cadastrados</h3>
+  <div id="lista-agenda-mk">
+    <p>Nenhum horário carregado ainda.</p>
+  </div>
+</section>
   </section>
 </main>
 
@@ -1086,16 +1165,134 @@ document.getElementById("botao-bloquear").addEventListener("click", async functi
   document.getElementById("data-bloqueio").value = "";
   document.getElementById("motivo-bloqueio").value = "";
 });
-</script>
+
+// NAVEGAÇÃO ENTRE AS ABAS
+const abaPainel = document.getElementById("aba-painel");
+const abaAgenda = document.getElementById("aba-agenda");
+
+abaPainel.addEventListener("click", function() {
+  document.getElementById("conteudo-painel").hidden = false;
+  document.getElementById("tela-agenda").hidden = true;
+
+  abaPainel.classList.add("ativa");
+  abaAgenda.classList.remove("ativa");
+});
+
+abaAgenda.addEventListener("click", function() {
+  document.getElementById("conteudo-painel").hidden = true;
+  document.getElementById("tela-agenda").hidden = false;
+  carregarAgendaMK();
+
+  abaAgenda.classList.add("ativa");
+  abaPainel.classList.remove("ativa");
+});
+
+// SALVAR AGENDAMENTO MANUAL NA AGENDA MK
+document.getElementById("formulario-agenda").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const mensagem = document.getElementById("mensagem-agenda");
+  const botao = this.querySelector("button[type='submit']");
+
+  const nome = document.getElementById("agenda-nome").value.trim();
+  const telefone = document.getElementById("agenda-telefone").value.trim();
+  const servico = document.getElementById("agenda-servico").value.trim();
+  const dataHora = document.getElementById("agenda-data").value;
+  const origem = document.getElementById("agenda-origem").value;
+  const observacoes = document.getElementById("agenda-observacoes").value.trim();
+
+  if (!dataHora || new Date(dataHora) <= new Date()) {
+    mensagem.textContent = "Escolha uma data e um horário futuros.";
+    return;
+  }
+
+  botao.disabled = true;
+  mensagem.textContent = "Salvando agendamento...";
+
+  const { error } = await supabaseClient
+    .from("agenda_mk")
+    .insert({
+      nome_cliente: nome,
+      telefone: telefone || null,
+      servico: servico,
+      data_hora: new Date(dataHora).toISOString(),
+      origem: origem,
+      observacoes: observacoes || null
+    });
+
+  botao.disabled = false;
+
+  if (error) {
+    console.error(error);
+    mensagem.textContent = "Não foi possível salvar. Confira as permissões.";
+    return;
+  }
+
+  mensagem.textContent = "Agendamento salvo com sucesso!";
+  this.reset();
+
+  carregarAgendaMK();
+});
 
 
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .catch((error) => console.error("Erro ao registrar o service worker do painel:", error));
+// CARREGAR OS AGENDAMENTOS MANUAIS
+async function carregarAgendaMK() {
+  const lista = document.getElementById("lista-agenda-mk");
+
+  lista.textContent = "Carregando horários...";
+
+  const { data, error } = await supabaseClient
+    .from("agenda_mk")
+    .select("*")
+    .order("data_hora", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    lista.textContent = "Não foi possível carregar os horários.";
+    return;
+  }
+
+  lista.replaceChildren();
+
+  if (!data || data.length === 0) {
+    lista.textContent = "Nenhum horário cadastrado ainda.";
+    return;
+  }
+
+  data.forEach(function(item) {
+    const cartao = document.createElement("article");
+    cartao.className = "cartao";
+
+    const titulo = document.createElement("h3");
+    titulo.textContent = item.nome_cliente;
+
+    const detalhes = document.createElement("p");
+    detalhes.textContent =
+      item.servico + " • " +
+      new Date(item.data_hora).toLocaleString("pt-BR");
+
+    const contato = document.createElement("p");
+    contato.textContent = "WhatsApp: " + (item.telefone || "Não informado");
+
+    const origem = document.createElement("p");
+    origem.textContent = "Origem: " + item.origem;
+
+    const observacoes = document.createElement("p");
+    observacoes.textContent = "Observações: " + (item.observacoes || "Nenhuma");
+
+    cartao.appendChild(titulo);
+    cartao.appendChild(detalhes);
+    cartao.appendChild(contato);
+    cartao.appendChild(origem);
+    cartao.appendChild(observacoes);
+
+    lista.appendChild(cartao);
   });
 }
 </script>
+
+
+
+
 </body>
 </html>
