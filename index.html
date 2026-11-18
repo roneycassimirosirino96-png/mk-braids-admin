@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#571b2b">
-  <link rel="manifest" href="./manifest.json">
   <title>MK Braids — Painel</title>
 
   <style>
@@ -195,7 +194,9 @@ button:disabled,
 }
 
 #botao-sair {
-  float: right;
+  display: block;
+  width: fit-content;
+  margin: 12px 0 16px auto;
   border: 1px solid var(--dourado-escuro);
   background: transparent;
   color: var(--dourado-claro);
@@ -204,7 +205,6 @@ button:disabled,
 #botao-sair:hover {
   background: #d4af6517;
 }
-
 .cartao {
   position: relative;
   margin: 15px 0;
