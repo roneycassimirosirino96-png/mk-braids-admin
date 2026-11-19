@@ -17,8 +17,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Novo pedido de agendamento";
   const options = {
     body: payload.body || "Uma cliente enviou um novo pedido para a MK Braids.",
-    icon: "/mk-braids-site/mk-braids-icon-192.png",
-    badge: "/mk-braids-site/mk-braids-icon-192.png",
+    icon: "/mk-braids-admin/icons/mk-braids-192.png",
+    badge: "/mk-braids-admin/icons/mk-braids-192.png",
     tag: payload.tag || "mk-braids-new-appointment",
     data: { url: payload.url || "/mk-braids-admin/" },
     renotify: true
